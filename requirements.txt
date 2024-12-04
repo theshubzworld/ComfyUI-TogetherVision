@@ -1,4 +1,1 @@
 together
-python-dotenv
-Pillow
-numpy
