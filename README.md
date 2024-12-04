@@ -181,3 +181,13 @@ If you encounter any issues or have questions:
 ---
 
 **Note**: This node requires a Together AI account and API key. You can get one at [Together AI's website](https://together.ai).
+
+**Updated README.md to reflect automatic mode switching based on image connection**
+
+The node now automatically switches between Vision Mode and Text-Only Mode based on the presence of an image input connection. When an image is connected, the node will generate detailed image descriptions. When no image is connected, the node will function as a text generation model.
+
+**Flexible Processing Modes**
+
+- **Image + Text Mode**: When an image is connected, generates descriptions and responses about the image
+- **Text-Only Mode**: When no image is connected, functions as a text generation model
+- Seamlessly switches between modes based on input connections
