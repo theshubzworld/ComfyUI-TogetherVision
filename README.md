@@ -1,4 +1,4 @@
-# ComfyUI Together Vision Node
+# ComfyUI-TogetherVision
 
 A custom node for ComfyUI that enables image description using Together AI's Vision models. This node allows you to generate detailed descriptions of images using either the paid or free version of Together AI's Llama Vision models.
 
@@ -27,12 +27,12 @@ A custom node for ComfyUI that enables image description using Together AI's Vis
 1. Clone this repository into your ComfyUI custom_nodes directory:
 ```bash
 cd ComfyUI/custom_nodes
-git clone https://github.com/yourusername/ComfyUI-OllamaFreeVision.git
+git clone https://github.com/mithamunda/ComfyUI-TogetherVision.git
 ```
 
 2. Install the required dependencies:
 ```bash
-cd ComfyUI-OllamaFreeVision
+cd ComfyUI-TogetherVision
 pip install -r requirements.txt
 ```
 

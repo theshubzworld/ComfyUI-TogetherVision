@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from together import Together
 import torch
 import logging
+import re
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -197,32 +198,58 @@ class TogetherVisionNode:
                 }
             ]
 
-            # Call the Together API with all parameters
-            logger.info(f"Calling Together API with model: {actual_model}")
-            response = self.client.chat.completions.create(
-                model=actual_model,
-                messages=messages,
-                temperature=temperature,
-                top_p=top_p,
-                top_k=top_k,
-                repetition_penalty=repetition_penalty,
-                stop=["<|eot_id|>", "<|eom_id|>"],
-                stream=True
-            )
+            try:
+                # Call the Together API with all parameters
+                logger.info(f"Calling Together API with model: {actual_model}")
+                response = self.client.chat.completions.create(
+                    model=actual_model,
+                    messages=messages,
+                    temperature=temperature,
+                    top_p=top_p,
+                    top_k=top_k,
+                    repetition_penalty=repetition_penalty,
+                    stop=["<|eot_id|>", "<|eom_id|>"],
+                    stream=True
+                )
 
-            # Process the streamed response
-            description = ""
-            logger.info("Processing streamed response")
-            for chunk in response:
-                logger.debug(f"Received chunk: {chunk}")
-                if hasattr(chunk, 'choices') and len(chunk.choices) > 0:
-                    if hasattr(chunk.choices[0], 'delta') and hasattr(chunk.choices[0].delta, 'content'):
-                        content = chunk.choices[0].delta.content
-                        if content is not None:
-                            description += content
+                # Process the streamed response
+                description = ""
+                logger.info("Processing streamed response")
+                for chunk in response:
+                    logger.debug(f"Received chunk: {chunk}")
+                    if hasattr(chunk, 'choices') and len(chunk.choices) > 0:
+                        if hasattr(chunk.choices[0], 'delta') and hasattr(chunk.choices[0].delta, 'content'):
+                            content = chunk.choices[0].delta.content
+                            if content is not None:
+                                description += content
 
-            logger.info("Finished processing response")
-            return (description,)
+                logger.info("Finished processing response")
+                return (description,)
+
+            except Exception as api_error:
+                error_msg = str(api_error).lower()
+                if "rate limit" in error_msg:
+                    wait_time = "1 hour"
+                    if "try again in" in error_msg:
+                        # Try to extract the wait time from the error message
+                        time_match = re.search(r"try again in (?:about )?([^:]+)", error_msg)
+                        if time_match:
+                            wait_time = time_match.group(1)
+                    
+                    error_message = f"""⚠️ Rate Limit Exceeded
+
+The {model_name} has reached its rate limit.
+Please try again in {wait_time}.
+
+Tips:
+1. Switch to the paid model for higher limits
+2. Wait for the rate limit to reset
+3. Use the API key from a different Together AI account"""
+                    
+                    logger.warning(f"Rate limit exceeded: {error_msg}")
+                    return (error_message,)
+                else:
+                    raise api_error
 
         except Exception as e:
             logger.error(f"Error in process_image: {str(e)}", exc_info=True)
