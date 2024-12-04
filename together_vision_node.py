@@ -7,36 +7,36 @@ from dotenv import load_dotenv
 from together import Together
 import torch
 import logging
-import re
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Load environment variables
+load_dotenv()
+
 class TogetherVisionNode:
+    """
+    A custom node for ComfyUI that uses Together AI's Vision models for image description.
+    """
+    
     def __init__(self):
         self.client = None
-    
+        
     @classmethod
     def INPUT_TYPES(cls):
-        """
-        Define the input types for the node.
-        """
         return {
             "required": {
-                "image": ("IMAGE",),  # ComfyUI image input
-                "model_name": (["Paid (Llama-3.2-11B-Vision)", "Free (Llama-Vision-Free)"],),
-                "api_key": ("STRING", {
-                    "multiline": False,
-                    "default": ""
-                }),
+                "image": ("IMAGE",),
+                "model_name": (["Free (Llama-Vision-Free)", "Paid (Llama-3.2-11B-Vision)"],),
+                "api_key": ("STRING", {"default": "", "multiline": False}),
                 "system_prompt": ("STRING", {
-                    "multiline": True,
-                    "default": "You are a helpful AI assistant that can see and describe images."
+                    "default": "You are an AI that describes images accurately and concisely.",
+                    "multiline": True
                 }),
                 "user_prompt": ("STRING", {
-                    "multiline": True,
-                    "default": "Describe what you see in this image in detail."
+                    "default": "Describe this image in detail.",
+                    "multiline": True
                 }),
                 "temperature": ("FLOAT", {
                     "default": 0.7,
@@ -53,7 +53,8 @@ class TogetherVisionNode:
                 "top_k": ("INT", {
                     "default": 50,
                     "min": 1,
-                    "max": 100
+                    "max": 100,
+                    "step": 1
                 }),
                 "repetition_penalty": ("FLOAT", {
                     "default": 1.0,
@@ -61,7 +62,7 @@ class TogetherVisionNode:
                     "max": 2.0,
                     "step": 0.1
                 })
-            },
+            }
         }
 
     RETURN_TYPES = ("STRING",)
@@ -93,7 +94,7 @@ class TogetherVisionNode:
             if len(image_array.shape) == 4:
                 logger.info("Removing batch dimension")
                 image_array = image_array[0]  # Take first image if batched
-            
+
             if len(image_array.shape) == 3:
                 if image_array.shape[0] in [3, 4]:  # If channels first (CHW)
                     logger.info("Converting CHW to HWC format")
@@ -105,7 +106,7 @@ class TogetherVisionNode:
             if image_array.shape[-1] == 4:  # RGBA
                 logger.info("Converting RGBA to RGB")
                 image_array = image_array[..., :3]  # Convert to RGB
-            
+
             # Convert to uint8 if needed
             if image_array.dtype == np.float32 or image_array.dtype == np.float64:
                 logger.info("Converting to uint8")
@@ -131,27 +132,11 @@ class TogetherVisionNode:
 
     def get_api_key(self, provided_key):
         """
-        Get API key from either the provided input or .env file
+        Get API key from input or environment variable.
         """
-        try:
-            if provided_key.strip():
-                logger.info("Using provided API key")
-                return provided_key.strip()
-            
-            # Try to load from .env in the same directory as this file
-            env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
-            if os.path.exists(env_path):
-                logger.info(f"Loading .env file from {env_path}")
-                load_dotenv(env_path)
-                api_key = os.getenv("TOGETHER_API_KEY")
-                if api_key:
-                    logger.info("Using API key from .env file")
-                    return api_key
-            
-            raise ValueError("API key not provided and not found in .env file. Please provide an API key.")
-        except Exception as e:
-            logger.error(f"Error in get_api_key: {str(e)}", exc_info=True)
-            raise
+        if provided_key:
+            return provided_key
+        return os.getenv('TOGETHER_API_KEY')
 
     def process_image(self, image, model_name, api_key, system_prompt, user_prompt, 
                      temperature, top_p, top_k, repetition_penalty):
@@ -230,23 +215,29 @@ class TogetherVisionNode:
                 error_msg = str(api_error).lower()
                 if "rate limit" in error_msg:
                     wait_time = "1 hour"
-                    if "try again in" in error_msg:
-                        # Try to extract the wait time from the error message
-                        time_match = re.search(r"try again in (?:about )?([^:]+)", error_msg)
-                        if time_match:
-                            wait_time = time_match.group(1)
+                    model_type = "free" if "free" in model_name.lower() else "paid"
+                    
+                    # Try to extract the wait time from the error message
+                    time_match = re.search(r"try again in (?:about )?([^:]+)", error_msg)
+                    if time_match:
+                        wait_time = time_match.group(1)
                     
                     error_message = f"""⚠️ Rate Limit Exceeded
 
 The {model_name} has reached its rate limit.
 Please try again in {wait_time}.
 
-Tips:
-1. Switch to the paid model for higher limits
+Tips to handle rate limits:
+1. {"Switch to the paid model for higher limits" if model_type == "free" else "Check your Together AI subscription limits"}
 2. Wait for the rate limit to reset
-3. Use the API key from a different Together AI account"""
+3. Use a different Together AI account
+4. Space out your requests over time
+
+Rate Limits:
+• Free Model: ~100 requests/day, 20-30 requests/hour
+• Paid Model: Based on subscription tier"""
                     
-                    logger.warning(f"Rate limit exceeded: {error_msg}")
+                    logger.warning(f"Rate limit exceeded for {model_type} model: {error_msg}")
                     return (error_message,)
                 else:
                     raise api_error
@@ -255,12 +246,11 @@ Tips:
             logger.error(f"Error in process_image: {str(e)}", exc_info=True)
             return (f"Error: {str(e)}",)
 
-# Node class mapping
+# Node registration
 NODE_CLASS_MAPPINGS = {
-    "TogetherVisionNode": TogetherVisionNode
+    "Together Vision 🔍": TogetherVisionNode
 }
 
-# Optional: Add custom widget mappings
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "TogetherVisionNode": "Together Vision "
+    "Together Vision 🔍": "Together Vision 🔍"
 }

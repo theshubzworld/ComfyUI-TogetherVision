@@ -76,14 +76,42 @@ pip install -r requirements.txt
 | Top K | Top K sampling | 50 | 1 - 100 |
 | Repetition Penalty | Prevents repetition | 1.0 | 0.0 - 2.0 |
 
+## Image Resolution Limits
+
+The node automatically handles high-resolution images:
+- Images larger than 2048x2048 pixels will be automatically resized
+- Aspect ratio is preserved during resizing
+- High-quality LANCZOS resampling is used
+
+For best results:
+1. Keep image dimensions under 2048 pixels
+2. Use ComfyUI's built-in resize nodes before this node
+3. For very large images, consider splitting them into sections
+
 ## Rate Limits
 
-- Free Model (Llama-Vision-Free):
-  - Limited requests per hour
-  - Consider using the paid version for higher limits
-- Paid Model:
-  - Higher rate limits
-  - Better performance
+### Free Model (Llama-Vision-Free)
+- Limited to approximately 100 requests per day
+- Rate limit resets every 24 hours
+- Hourly limits may apply (typically 20-30 requests per hour)
+
+### Paid Model (Llama-3.2-11B-Vision)
+- Higher rate limits based on your Together AI subscription
+- Better performance and reliability
+- Priority API access
+
+### Handling Rate Limits
+When you hit a rate limit:
+1. Wait for the specified time (usually 1 hour for hourly limits)
+2. Switch to a different Together AI account
+3. Upgrade to the paid model for higher limits
+4. Consider batching your requests during off-peak hours
+
+### Tips to Avoid Rate Limits
+1. Cache results for repeated images
+2. Use the paid model for production workloads
+3. Monitor your API usage through Together AI dashboard
+4. Space out your requests when possible
 
 ## Error Handling
 
