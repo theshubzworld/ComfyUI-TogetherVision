@@ -2,7 +2,7 @@
 
 A custom node for ComfyUI that enables image description using Together AI's Vision models. This node allows you to generate detailed descriptions of images using either the paid or free version of Together AI's Llama Vision models.
 
-![Together Vision Node](placeholder_for_node_screenshot.png)
+![Together Vision Node](images/node-screenshot.png)
 
 ## Features
 
