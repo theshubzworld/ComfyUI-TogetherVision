@@ -2,25 +2,30 @@
 
 A custom node for ComfyUI that enables image description using Together AI's Vision models. This node allows you to generate detailed descriptions of images using either the paid or free version of Together AI's Llama Vision models.
 
-![Together Vision Node](images/node-screenshot.png)
-
 ## Features
 
-- 🖼️ **Image Description**: Generate detailed descriptions of any image using state-of-the-art vision models
-- 🤖 **Multiple Models**:
-  - Paid Version: Llama-3.2-11B-Vision-Instruct-Turbo
-  - Free Version: Llama-Vision-Free
-- ⚙️ **Customizable Parameters**:
-  - Temperature control
-  - Top P sampling
-  - Top K sampling
-  - Repetition penalty
-- 🔑 **Flexible API Key Management**:
-  - Direct input in the node
-  - Environment variable through .env file
-- 📝 **Custom Prompting**:
-  - System prompt customization
-  - User prompt customization
+🖼️ **Image Description & Text Generation**:
+- Generate detailed descriptions of images using state-of-the-art vision models
+- Toggle vision processing on/off for flexible usage
+- Use as a text-only LLM when vision is disabled
+
+🤖 **Multiple Models**:
+- Paid Version: Llama-3.2-11B-Vision-Instruct-Turbo
+- Free Version: Llama-Vision-Free
+
+⚙️ **Customizable Parameters**:
+- Temperature control
+- Top P sampling
+- Top K sampling
+- Repetition penalty
+
+🔑 **Flexible API Key Management**:
+- Direct input in the node
+- Environment variable through .env file
+
+📝 **Custom Prompting**:
+- System prompt customization
+- User prompt customization
 
 ## Getting Started
 
@@ -38,11 +43,7 @@ cd ComfyUI/custom_nodes
 git clone https://github.com/mithamunda/ComfyUI-TogetherVision.git
 ```
 
-2. Install the required dependencies:
-```bash
-cd ComfyUI-TogetherVision
-pip install -r requirements.txt
-```
+2. Restart ComfyUI - it will automatically install the required dependencies from requirements.txt
 
 3. Set up your Together AI API key using one of these methods:
    - Option 1: Create a `.env` file in the node directory:
@@ -51,12 +52,12 @@ pip install -r requirements.txt
      ```
    - Option 2: Input your API key directly in the node
 
-4. Restart ComfyUI
-
 ## Usage
 
 1. Add the "Together Vision 🔍" node to your workflow
-2. Connect an image output to the node's image input
+2. Configure Vision Mode:
+   - Enable Vision (Default): Connect an image output to the node's image input
+   - Disable Vision: Skip image input for text-only generation
 3. Select your preferred model (Paid or Free)
 4. Configure the parameters:
    - Temperature (0.0 - 2.0)
@@ -65,12 +66,13 @@ pip install -r requirements.txt
    - Repetition Penalty (0.0 - 2.0)
 5. Customize the prompts:
    - System prompt: Sets the behavior of the AI
-   - User prompt: Specific instructions for image description
+   - User prompt: Specific instructions for image description or text generation
 
 ## Parameters
 
 | Parameter | Description | Default | Range |
 |-----------|-------------|---------|--------|
+| Vision Enable | Toggles vision processing | True | True/False |
 | Temperature | Controls randomness | 0.7 | 0.0 - 2.0 |
 | Top P | Nucleus sampling | 0.7 | 0.0 - 1.0 |
 | Top K | Top K sampling | 50 | 1 - 100 |
@@ -113,6 +115,18 @@ When you hit a rate limit:
 3. Monitor your API usage through Together AI dashboard
 4. Space out your requests when possible
 
+## Operating Modes
+
+### Vision Mode (Default)
+- Requires connected image input
+- Generates detailed image descriptions
+- Full vision + language capabilities
+
+### Text-Only Mode
+- No image input required
+- Functions as a standard LLM
+- Useful for text generation and chat
+
 ## Error Handling
 
 The node includes comprehensive error handling and logging:
@@ -120,24 +134,25 @@ The node includes comprehensive error handling and logging:
 - Rate limit notifications
 - Image processing errors
 - API response errors
+- Vision mode validation
 
 ## Examples
 
 Here are some example prompts you can try:
 
-1. Detailed Description:
+1. Vision Mode - Detailed Description:
 ```
 Describe this image in detail, including colors, objects, and composition.
 ```
 
-2. Technical Analysis:
+2. Vision Mode - Technical Analysis:
 ```
 Analyze this image from a technical perspective, including lighting, composition, and photographic techniques.
 ```
 
-3. Creative Writing:
+3. Text-Only Mode - Creative Writing:
 ```
-Write a creative story inspired by this image.
+Write a creative story about a magical forest.
 ```
 
 ## Contributing
