@@ -22,7 +22,15 @@ A custom node for ComfyUI that enables image description using Together AI's Vis
   - System prompt customization
   - User prompt customization
 
-## Installation
+## Getting Started
+
+### 1. Get Together AI API Key
+1. Go to [Together AI API Settings](https://api.together.xyz/settings/api-keys)
+2. Sign up or log in to your Together AI account
+3. Click "Create API Key"
+4. Copy your API key for later use
+
+### 2. Installation
 
 1. Clone this repository into your ComfyUI custom_nodes directory:
 ```bash
@@ -36,7 +44,7 @@ cd ComfyUI-TogetherVision
 pip install -r requirements.txt
 ```
 
-3. Set up your Together AI API key:
+3. Set up your Together AI API key using one of these methods:
    - Option 1: Create a `.env` file in the node directory:
      ```
      TOGETHER_API_KEY=your_api_key_here
