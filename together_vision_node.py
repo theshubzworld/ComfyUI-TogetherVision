@@ -119,6 +119,17 @@ class TogetherVisionNode:
             if pil_image.size[0] * pil_image.size[1] == 0:
                 raise ValueError("Invalid image dimensions")
 
+            # Only resize if the image is larger than 1024 in either dimension
+            max_size = 1024
+            original_width, original_height = pil_image.size
+            
+            if original_width > max_size or original_height > max_size:
+                # Calculate scaling factor to maintain exact aspect ratio
+                scale = max_size / max(original_width, original_height)
+                new_width = int(original_width * scale)
+                new_height = int(original_height * scale)
+                pil_image = pil_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
             # Convert to base64
             buffered = io.BytesIO()
             pil_image.save(buffered, format="PNG")

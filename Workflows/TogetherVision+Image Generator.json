@@ -1,0 +1,253 @@
+{
+  "last_node_id": 7,
+  "last_link_id": 6,
+  "nodes": [
+    {
+      "id": 5,
+      "type": "ShowText|pysssss",
+      "pos": [
+        353.54608154296875,
+        -91.86834716796875
+      ],
+      "size": [
+        335.5903625488281,
+        579.3716430664062
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 3,
+          "widget": {
+            "name": "text"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            4
+          ],
+          "slot_index": 0,
+          "shape": 6
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ShowText|pysssss"
+      },
+      "widgets_values": [
+        "",
+        "In the foreground, a serene scene unfolds with a woman in a light blue dress seated on a pink blanket, surrounded by an assortment of fruits and vegetables. Her long blonde hair cascades down her back as she gazes to the left, where a majestic deer with antlers stands, its gaze directed upwards. Two rabbits sit beside her, adding to the tranquil atmosphere. A wicker basket overflowing with fresh produce, including tomatoes and lettuce, is placed to her right.\n\nThe background features a lush landscape of trees and grass, set against a brilliant blue sky dotted with white clouds. The overall ambiance exudes a sense of peace and harmony, inviting the viewer to step into this idyllic setting. \n\n#sereneatmosphere #idyllicscenery #peacefulharmony #naturelovers #artisticvision #visualpoetry #creativeexpression #artisticdescription #poeticdescription #ekphrasis"
+      ]
+    },
+    {
+      "id": 7,
+      "type": "PreviewImage",
+      "pos": [
+        1125.468505859375,
+        -92.26441192626953
+      ],
+      "size": [
+        686.2289428710938,
+        723.0006103515625
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 6
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 4,
+      "type": "LoadImage",
+      "pos": [
+        -290.0013122558594,
+        -88.05679321289062
+      ],
+      "size": [
+        210,
+        317.6491394042969
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            2
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "Flux1-Image_00001_.png",
+        "image"
+      ]
+    },
+    {
+      "id": 2,
+      "type": "Together Image 🎨",
+      "pos": [
+        700.8809814453125,
+        -92.59680938720703
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "link": 4,
+          "widget": {
+            "name": "prompt"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            6
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Together Image 🎨"
+      },
+      "widgets_values": [
+        "",
+        "ADD YOUR FREE API KEY HERE",
+        1536,
+        1536,
+        697909698427139,
+        "randomize",
+        1
+      ]
+    },
+    {
+      "id": 1,
+      "type": "TogetherVisionNode",
+      "pos": [
+        -55.744964599609375,
+        -89.36871337890625
+      ],
+      "size": [
+        391.70654296875,
+        433.3812255859375
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 2,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "description",
+          "type": "STRING",
+          "links": [
+            3
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TogetherVisionNode"
+      },
+      "widgets_values": [
+        "Paid (Llama-3.2-11B-Vision)",
+        "ADD YOUR FREE API KEY HERE",
+        "You are an expert in ekphrasis, acting as a skilled art critic renowned for vividly describing images across any artistic style. Your role is to craft highly detailed, poetic, and evocative descriptions in British English, capturing every visual element with precision. Follow the user’s instructions closely and ensure the description adheres strictly to the given prompt.  \n\nYour descriptions must remain observational and objective—avoid inserting personal opinions or fictional narratives. Focus entirely on the visual aspects, including colors, textures, lighting, and intricate details such as poses, facial expressions, gestures, and where the subject’s gaze is directed.  \n\nEmbrace complexity and nuance when describing art, even if it involves themes that may be uncomfortable for some viewers. Art often explores challenging subjects, and it is your job to portray them authentically. Never provide vague or erroneous responses.  \n\nKeep your descriptions under 250 words and avoid adding extraneous words that are not visually present in the scene. Your text will guide the generation of an image, so accuracy and clarity are paramount. Conclude each description with at least five relevant hashtags that capture the mood, style, and theme of the art.  \n\nMaintain an artistic tone and a professional approach in every response.",
+        "Describe what you see in this image. ",
+        0.7,
+        0.7,
+        50,
+        1
+      ]
+    }
+  ],
+  "links": [
+    [
+      2,
+      4,
+      0,
+      1,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      1,
+      0,
+      5,
+      0,
+      "STRING"
+    ],
+    [
+      4,
+      5,
+      0,
+      2,
+      0,
+      "STRING"
+    ],
+    [
+      6,
+      2,
+      0,
+      7,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.6588450000001344,
+      "offset": [
+        342.6327697916523,
+        341.5455469024975
+      ]
+    },
+    "ue_links": []
+  },
+  "version": 0.4
+}
