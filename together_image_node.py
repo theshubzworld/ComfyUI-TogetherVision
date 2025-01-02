@@ -26,6 +26,25 @@ class TogetherImageNode:
         self.last_request_time = 0
         self.min_request_interval = 1.0  # Minimum seconds between requests
         
+    def get_client(self, api_key: str) -> Optional[Together]:
+        """Get or create Together client with validation."""
+        try:
+            # If api_key from node is empty, try to get from .env
+            final_api_key = api_key.strip() if api_key and api_key.strip() else os.getenv('TOGETHER_API_KEY')
+            
+            if not final_api_key:
+                logger.error("No API key provided in node or .env file")
+                raise ValueError("No API key found. Please provide an API key in the node or set TOGETHER_API_KEY in .env file")
+            
+            if self.client is None:
+                # Set the API key in environment
+                os.environ["TOGETHER_API_KEY"] = final_api_key
+                self.client = Together()
+            return self.client
+        except Exception as e:
+            logger.error(f"Failed to initialize Together client: {str(e)}")
+            return None
+
     @classmethod
     def INPUT_TYPES(cls):
         return {
@@ -68,13 +87,6 @@ class TogetherImageNode:
     FUNCTION = "generate_image"
     CATEGORY = "image"
     OUTPUT_NODE = True
-
-    def get_api_key(self, provided_key: str) -> str:
-        """Get API key with validation."""
-        api_key = provided_key or os.getenv('TOGETHER_API_KEY')
-        if not api_key:
-            raise ValueError("API key not provided. Please provide an API key or set TOGETHER_API_KEY environment variable.")
-        return api_key
 
     def b64_to_image(self, b64_string: str) -> torch.Tensor:
         """Convert base64 string to torch tensor image."""
@@ -141,13 +153,13 @@ class TogetherImageNode:
             if num_images < 1 or num_images > 4:
                 raise ValueError(f"Number of images must be between 1 and 4. Got {num_images}")
 
-            # Initialize API client
-            api_key = self.get_api_key(api_key)
-            if self.client is None:
-                self.client = Together(api_key=api_key)
+            # Get client with validation and .env fallback
+            client = self.get_client(api_key)
+            if client is None:
+                return None, "Error: Failed to initialize API client. Please check your API key."
 
             # Make API call
-            response = self.client.images.generate(
+            response = client.images.generate(
                 prompt=prompt,
                 model="black-forest-labs/FLUX.1-schnell-Free",
                 width=width,

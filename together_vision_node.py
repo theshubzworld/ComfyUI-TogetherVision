@@ -27,6 +27,41 @@ class TogetherVisionNode:
         self.client = None
         self.last_request_time = 0
         self.min_request_interval = 1.0  # Minimum seconds between requests
+        self.cache = {}  # Response cache
+        
+    def validate_api_key(self, api_key: str) -> bool:
+        """Validate if API key is present and well-formed."""
+        if not api_key or len(api_key.strip()) == 0:
+            logger.error("API key is missing or empty")
+            return False
+        return True
+        
+    def get_client(self, api_key: str) -> Optional[Together]:
+        """Get or create Together client with validation."""
+        try:
+            # If api_key from node is empty, try to get from .env
+            final_api_key = api_key.strip() if api_key and api_key.strip() else os.getenv('TOGETHER_API_KEY')
+            
+            if not final_api_key:
+                logger.error("No API key provided in node or .env file")
+                raise ValueError("No API key found. Please provide an API key in the node or set TOGETHER_API_KEY in .env file")
+            
+            if self.client is None:
+                # Set the API key in environment
+                os.environ["TOGETHER_API_KEY"] = final_api_key
+                self.client = Together()
+            return self.client
+        except Exception as e:
+            logger.error(f"Failed to initialize Together client: {str(e)}")
+            return None
+            
+    def get_cached_response(self, cache_key: str) -> Optional[str]:
+        """Get cached response if available."""
+        return self.cache.get(cache_key)
+        
+    def cache_response(self, cache_key: str, response: str):
+        """Cache the API response."""
+        self.cache[cache_key] = response
         
     @classmethod
     def INPUT_TYPES(cls):
@@ -177,10 +212,10 @@ class TogetherVisionNode:
             }
             actual_model = model_mapping[model_name]
 
-            # Initialize API client
-            api_key = self.get_api_key(api_key)
-            if self.client is None:
-                self.client = Together(api_key=api_key)
+            # Get client with validation and .env fallback
+            client = self.get_client(api_key)
+            if client is None:
+                return ("Error: Failed to initialize API client. Please check your API key.",)
 
             # Prepare messages
             messages = [{"role": "system", "content": system_prompt}]
@@ -207,7 +242,7 @@ class TogetherVisionNode:
 
             try:
                 # API call with timeout handling
-                response = self.client.chat.completions.create(
+                response = client.chat.completions.create(
                     model=actual_model,
                     messages=messages,
                     temperature=temperature,
