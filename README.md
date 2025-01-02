@@ -10,10 +10,15 @@ A custom node for ComfyUI that enables image description using Together AI's Vis
 - Generate detailed descriptions of images using state-of-the-art vision models
 - Toggle vision processing on/off for flexible usage
 - Use as a text-only LLM when vision is disabled
+- **New Free Image Generation Node**: Utilize free vision models for image analysis
 
 🤖 **Multiple Models**:
-- Paid Version: Llama-3.2-11B-Vision-Instruct-Turbo
-- Free Version: Llama-Vision-Free
+- **Paid Version**: 
+  - Llama-3.2-11B-Vision-Instruct-Turbo
+- **Free Version**:
+  - Llama-Vision-Free
+  - Llava-v1.6-Mistral-7B Vision Model
+  - Free Image Generation Node for cost-effective image processing
 
 ⚙️ **Customizable Parameters**:
 - Temperature control
