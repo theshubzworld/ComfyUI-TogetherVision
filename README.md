@@ -43,7 +43,7 @@ A custom node for ComfyUI that enables image description using Together AI's Vis
 1. Clone this repository into your ComfyUI custom_nodes directory:
 ```bash
 cd ComfyUI/custom_nodes
-git clone https://github.com/mithamunda/ComfyUI-TogetherVision.git
+git clone https://github.com/thetheshubzworld/ComfyUI-TogetherVision.git
 ```
 
 2. Restart ComfyUI - it will automatically install the required dependencies from requirements.txt
