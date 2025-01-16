@@ -6,10 +6,10 @@ license = {file = "LICENSE"}
 dependencies = ["together", "python-dotenv"]
 
 [project.urls]
-Repository = "https://github.com/mithamunda/ComfyUI-TogetherVision"
+Repository = "https://github.com/theshubzworld/ComfyUI-TogetherVision"
 #  Used by Comfy Registry https://comfyregistry.org
 
 [tool.comfy]
-PublisherId = "shubzworld"
+PublisherId = "theshubzworld"
 DisplayName = "ComfyUI-TogetherVision"
 Icon = ""
