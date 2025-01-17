@@ -10,6 +10,6 @@ Repository = "https://github.com/theshubzworld/ComfyUI-TogetherVision"
 #  Used by Comfy Registry https://comfyregistry.org
 
 [tool.comfy]
-PublisherId = "theshubzworld"
+PublisherId = "shubzworld"
 DisplayName = "ComfyUI-TogetherVision"
 Icon = "icon.svg"
