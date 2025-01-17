@@ -1,5 +1,5 @@
 [project]
-name = "comfyui-togethervision"
+name = "comfyui-togethervisionv2"
 description = "A custom ComfyUI node using Together AI's Vision models for free image descriptions, image generation, and image-to-image transformation. Features include customizable prompts, advanced parameters, and robust error handling."
 version = "2.1.0"
 license = {file = "LICENSE"}
