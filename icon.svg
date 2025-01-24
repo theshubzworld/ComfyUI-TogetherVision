@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- Background -->
+  <rect width="256" height="256" fill="#4A90E2" rx="40" ry="40"/>
+  
+  <!-- Eye Stylization -->
+  <path d="M128 64c-64 0-112 64-112 64s48 64 112 64 112-64 112-64-48-64-112-64z" 
+        fill="white" 
+        stroke="#FFFFFF" 
+        stroke-width="12"/>
+  
+  <!-- Pupil -->
+  <circle cx="128" cy="128" r="32" fill="#2C3E50"/>
+  
+  <!-- AI Circuit Lines -->
+  <path d="M40 180 L80 140" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/>
+  <path d="M216 180 L176 140" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/>
+  
+  <!-- Lens Glare -->
+  <circle cx="128" cy="128" r="16" fill="rgba(255,255,255,0.3)"/>
+</svg>

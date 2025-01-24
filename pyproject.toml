@@ -1,0 +1,15 @@
+[project]
+name = "comfyui-togethervision"
+description = "A custom ComfyUI node using Together AI's Vision models for free image descriptions, image generation, and image-to-image transformation. Features include customizable prompts, advanced parameters, and robust error handling."
+version = "2.1.1"
+license = {file = "LICENSE"}
+dependencies = ["together", "python-dotenv"]
+
+[project.urls]
+Repository = "https://github.com/theshubzworld/ComfyUI-TogetherVision"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = "shubzworld"
+DisplayName = "ComfyUI-TogetherVision"
+Icon = "icon.svg"
