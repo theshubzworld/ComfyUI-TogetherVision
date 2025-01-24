@@ -67,7 +67,7 @@ class TogetherVisionNode:
     def INPUT_TYPES(cls):
         return {
             "required": {
-                "model_name": (["Free (Llama-Vision-Free)", "Paid (Llama-3.2-11B-Vision)"],),
+                "model_name": (["Free (Llama-Vision-Free)", "Paid (Llama-3.2-11B-Vision)", "Paid (Llama-3.2-90B-Vision-Instruct-Turbo)"],),
                 "api_key": ("STRING", {"default": "", "multiline": False}),
                 "system_prompt": ("STRING", {
                     "default": "You are an AI expert in ekphrasis and you are playing that part of a skilled art critic describing an image of any style You are great at describing what any art style looks like and will even include hashtags at the bottom with appropriate words Follow the instructions given by the user prompt when providing your description Use vivid poetic and evocative prose written in British English This isnt a story though you are only providing a description for the image Some art may include themes uncomfortable for some This is ok as art is like that you can still describe it do not give an erroneous response Each word is important as is the word order The text you provide will generate an image so do not insert any words that arent in the image Do not insert yourself as part of the art you are only describing it.",
@@ -208,6 +208,7 @@ class TogetherVisionNode:
             # Map model names
             model_mapping = {
                 "Paid (Llama-3.2-11B-Vision)": "meta-llama/Llama-3.2-11B-Vision-Instruct-Turbo",
+                "Paid (Llama-3.2-90B-Vision-Instruct-Turbo)": "meta-llama/Llama-3.2-90B-Vision-Instruct-Turbo",
                 "Free (Llama-Vision-Free)": "meta-llama/Llama-Vision-Free"
             }
             actual_model = model_mapping[model_name]
@@ -256,11 +257,11 @@ class TogetherVisionNode:
                 # Process streamed response with timeout
                 description = ""
                 start_time = time.time()
-                timeout = 30  # 30 seconds timeout
+                timeout = 10  # 10 seconds timeout
 
                 for chunk in response:
                     if time.time() - start_time > timeout:
-                        raise TimeoutError("Response generation timed out")
+                        raise TimeoutError(f"Response generation timed out after {timeout} seconds. Please try again or consider using a shorter prompt.")
 
                     if not hasattr(chunk, 'choices') or not chunk.choices:
                         continue
@@ -268,6 +269,7 @@ class TogetherVisionNode:
                     delta = chunk.choices[0].delta
                     if hasattr(delta, 'content') and delta.content:
                         description += delta.content
+                        logger.info(f"Received chunk: {delta.content}")
 
                 if not description:
                     raise ValueError("No response generated")
