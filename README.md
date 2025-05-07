@@ -12,15 +12,26 @@ A simple ComfyUI custom node for image description and image generation using To
 
 ## Supported Models in Vision & Image Generation Nodes
 
-The Together Vision and Image Generation nodes support the following models:
+The Together Vision node supports the following vision-capable models:
 
-- meta-llama/Llama-3.3-70B-Instruct-Turbo-Free
 - deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free
 - meta-llama/Llama-Vision-Free
 - meta-llama/Llama-3.2-90B-Vision-Instruct-Turbo
 - Other (Custom, if available)
 
-You can select these models directly from the node's dropdown menu in ComfyUI. For image generation, the node uses Together AI's FLUX model.
+You can select these models directly from the node's dropdown menu in ComfyUI.
+
+### Non-Vision (Text-Only) Models
+
+The node also supports these non-vision, text-only models:
+
+
+- meta-llama/Llama-3.3-70B-Instruct-Turbo-Free
+- Any other text-only LLMs supported by Together AI
+
+You can use these models for pure text generation tasks when no image is provided.
+
+For image generation, the node uses Together AI's FLUX model.
 
 ## Getting Started
 
