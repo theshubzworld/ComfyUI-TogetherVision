@@ -61,16 +61,56 @@ git clone https://github.com/theshubzworld/ComfyUI-TogetherVision.git
 2. Configure Vision Mode:
    - Enable Vision (Default): Connect an image output to the node's image input
    - Disable Vision: Skip image input for text-only generation
+3. Select your preferred model (Paid or Free)
+4. Configure the parameters:
+   - Temperature (0.0 - 2.0)
+   - Top P (0.0 - 1.0)
+   - Top K (1 - 100)
+   - Repetition Penalty (0.0 - 2.0)
+5. Customize the prompts:
+   - System prompt: Sets the behavior of the AI
+   - User prompt: Specific instructions for image description or text generation
+
+## Parameters
+
+| Parameter | Description | Default | Range |
+|-----------|-------------|---------|--------|
+| Vision Enable | Toggles vision processing | True | True/False |
+| Temperature | Controls randomness | 0.7 | 0.0 - 2.0 |
+| Top P | Nucleus sampling | 0.7 | 0.0 - 1.0 |
+| Top K | Top K sampling | 50 | 1 - 100 |
+| Repetition Penalty | Prevents repetition | 1.0 | 0.0 - 2.0 |
+
+## Image Resolution Limits
+
+The node automatically handles high-resolution images:
+- Images larger than 2048x2048 pixels will be automatically resized
+- Aspect ratio is preserved during resizing
+- High-quality LANCZOS resampling is used
+
+For best results:
+1. Keep image dimensions under 2048 pixels
+2. Use ComfyUI's built-in resize nodes before this node
+3. For very large images, consider splitting them into sections
 
 ## Rate Limits
 
 ### Free Model (Llama-Vision-Free)
 - Limited to approximately 100 requests per day
 - Rate limit resets every 24 hours
+- Hourly limits may apply (typically 20-30 requests per hour)
 
-### Paid Model
-- Higher rate limits
-- Better performance
+### Paid Model (Llama-3.2-11B-Vision)
+- Higher rate limits based on your Together AI subscription
+- Better performance and reliability
+- Priority API access
+
+### Handling Rate Limits
+When you hit a rate limit:
+1. Wait for the specified time (usually 1 hour for hourly limits)
+2. Switch to a different Together AI account
+3. Upgrade to the paid model for higher limits
+4. Consider batching your requests during off-peak hours
 
 ### Tips to Avoid Rate Limits
 1. Cache results for repeated images
@@ -142,6 +182,10 @@ If you encounter any issues or have questions:
 ---
 
 **Note**: This node requires a Together AI account and API key. You can get one at [Together AI's website](https://together.ai).
+
+**Updated README.md to reflect automatic mode switching based on image connection**
+
+The node now automatically switches between Vision Mode and Text-Only Mode based on the presence of an image input connection. When an image is connected, the node will generate detailed image descriptions. When no image is connected, the node will function as a text generation model.
 
 **Flexible Processing Modes**
 
