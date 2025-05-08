@@ -1,0 +1,335 @@
+import base64
+import io
+import os
+from PIL import Image
+import numpy as np
+from dotenv import load_dotenv
+from together import Together
+import torch
+import logging
+import re
+import time
+from typing import Optional
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Load environment variables
+load_dotenv()
+
+class TogetherVisionNode:
+    """
+    A custom node for ComfyUI that uses Together AI's Vision models for image description.
+    """
+    
+    def __init__(self):
+        self.client = None
+        self.last_request_time = 0
+        self.min_request_interval = 1.0  # Minimum seconds between requests
+        self.cache = {}  # Response cache
+        
+    def validate_api_key(self, api_key: str) -> bool:
+        """Validate if API key is present and well-formed."""
+        if not api_key or len(api_key.strip()) == 0:
+            logger.error("API key is missing or empty")
+            return False
+        return True
+        
+    def get_client(self, api_key: str) -> Optional[Together]:
+        """Get or create Together client with validation."""
+        try:
+            # If api_key from node is empty, try to get from .env
+            final_api_key = api_key.strip() if api_key and api_key.strip() else os.getenv('TOGETHER_API_KEY')
+            
+            if not final_api_key:
+                logger.error("No API key provided in node or .env file")
+                raise ValueError("No API key found. Please provide an API key in the node or set TOGETHER_API_KEY in .env file")
+            
+            if self.client is None:
+                # Set the API key in environment
+                os.environ["TOGETHER_API_KEY"] = final_api_key
+                self.client = Together()
+            return self.client
+        except Exception as e:
+            logger.error(f"Failed to initialize Together client: {str(e)}")
+            return None
+            
+    def get_cached_response(self, cache_key: str) -> Optional[str]:
+        """Get cached response if available."""
+        return self.cache.get(cache_key)
+        
+    def cache_response(self, cache_key: str, response: str):
+        """Cache the API response."""
+        self.cache[cache_key] = response
+        
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "model_name": ([
+                    "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
+                    "deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free",
+                    "meta-llama/Llama-Vision-Free",
+                    "meta-llama/Llama-3.2-90B-Vision-Instruct-Turbo",
+                    "Other (Custom)"
+                ],),
+                "custom_model_name": ("STRING", {"default": "", "multiline": False}),
+                "api_key": ("STRING", {"default": "", "multiline": False}),
+                "system_prompt": ("STRING", {
+                    "default": "You are an AI expert in ekphrasis and you are playing that part of a skilled art critic describing an image of any style You are great at describing what any art style looks like and will even include hashtags at the bottom with appropriate words Follow the instructions given by the user prompt when providing your description Use vivid poetic and evocative prose written in British English This isnt a story though you are only providing a description for the image Some art may include themes uncomfortable for some This is ok as art is like that you can still describe it do not give an erroneous response Each word is important as is the word order The text you provide will generate an image so do not insert any words that arent in the image Do not insert yourself as part of the art you are only describing it.",
+                    "multiline": True
+                }),
+                "user_prompt": ("STRING", {
+                    "default": "Describe this image in detail.",
+                    "multiline": True
+                }),
+                "temperature": ("FLOAT", {
+                    "default": 0.7,
+                    "min": 0.0,
+                    "max": 2.0,
+                    "step": 0.1
+                }),
+                "top_p": ("FLOAT", {
+                    "default": 0.7,
+                    "min": 0.0,
+                    "max": 1.0,
+                    "step": 0.1
+                }),
+                "top_k": ("INT", {
+                    "default": 50,
+                    "min": 1,
+                    "max": 100,
+                    "step": 1
+                }),
+                "repetition_penalty": ("FLOAT", {
+                    "default": 1.0,
+                    "min": 0.0,
+                    "max": 2.0,
+                    "step": 0.1
+                }),
+                "timeout": ("INT", {
+                    "default": 30,
+                    "min": 5,
+                    "max": 120,
+                    "step": 1,
+                    "label": "Timeout (seconds)"
+                })
+            },
+            "optional": {
+                "image": ("IMAGE",)
+            }
+        }
+
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("description",)
+    FUNCTION = "process_image"
+    CATEGORY = "image/text"
+    OUTPUT_NODE = True
+
+    def encode_image(self, image_tensor: torch.Tensor) -> str:
+        """
+        Converts an image tensor to base64 string with improved error handling.
+        """
+        try:
+            # Handle different input types
+            if isinstance(image_tensor, torch.Tensor):
+                image_array = image_tensor.cpu().numpy()
+            elif isinstance(image_tensor, np.ndarray):
+                image_array = image_tensor
+            else:
+                raise ValueError(f"Unsupported image type: {type(image_tensor)}")
+
+            # Validate array shape
+            if not (2 <= len(image_array.shape) <= 4):
+                raise ValueError(f"Invalid image shape: {image_array.shape}")
+
+            # Handle batch dimension
+            if len(image_array.shape) == 4:
+                image_array = image_array[0]
+
+            # Ensure correct channel format
+            if len(image_array.shape) == 3:
+                if image_array.shape[0] in [3, 4]:  # CHW to HWC
+                    image_array = np.transpose(image_array, (1, 2, 0))
+
+            # Convert RGBA to RGB if needed
+            if image_array.shape[-1] == 4:
+                image_array = image_array[..., :3]
+
+            # Normalize and convert to uint8
+            if image_array.dtype in [np.float32, np.float64]:
+                image_array = (image_array * 255).clip(0, 255).astype(np.uint8)
+            elif image_array.dtype != np.uint8:
+                raise ValueError(f"Unsupported image dtype: {image_array.dtype}")
+
+            # Create PIL Image and validate
+            pil_image = Image.fromarray(image_array)
+            if pil_image.size[0] * pil_image.size[1] == 0:
+                raise ValueError("Invalid image dimensions")
+
+            # Only resize if the image is larger than 1024 in either dimension
+            max_size = 1024
+            original_width, original_height = pil_image.size
+            
+            if original_width > max_size or original_height > max_size:
+                # Calculate scaling factor to maintain exact aspect ratio
+                scale = max_size / max(original_width, original_height)
+                new_width = int(original_width * scale)
+                new_height = int(original_height * scale)
+                pil_image = pil_image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+            # Convert to base64
+            buffered = io.BytesIO()
+            pil_image.save(buffered, format="PNG")
+            return base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+        except Exception as e:
+            logger.error(f"Image encoding error: {str(e)}")
+            raise ValueError(f"Failed to encode image: {str(e)}")
+
+    def get_api_key(self, provided_key: str) -> str:
+        """Get API key with validation."""
+        api_key = provided_key or os.getenv('TOGETHER_API_KEY')
+        if not api_key:
+            raise ValueError("API key not provided. Please provide an API key or set TOGETHER_API_KEY environment variable.")
+        return api_key
+
+    def rate_limit_check(self):
+        """Implement rate limiting."""
+        current_time = time.time()
+        time_since_last = current_time - self.last_request_time
+        if time_since_last < self.min_request_interval:
+            time.sleep(self.min_request_interval - time_since_last)
+        self.last_request_time = time.time()
+
+    def process_image(self, model_name: str, api_key: str, system_prompt: str, user_prompt: str,
+                     temperature: float, top_p: float, top_k: int, repetition_penalty: float,
+                     timeout: int = 30, custom_model_name: str = "", image: Optional[torch.Tensor] = None) -> tuple:
+        """
+        Process the image and generate description using Together API with improved stability and timeout handling.
+        """
+        try:
+            # Validate required inputs
+            if not user_prompt:
+                raise ValueError("User prompt cannot be empty")
+            if not system_prompt:
+                raise ValueError("System prompt cannot be empty")
+
+            # Model selection logic
+            if model_name == "Other (Custom)":
+                if not custom_model_name.strip():
+                    raise ValueError("Please provide a custom model name when selecting 'Other (Custom)'.")
+                actual_model = custom_model_name.strip()
+            else:
+                actual_model = model_name
+
+            # Get client with validation and .env fallback
+            client = self.get_client(api_key)
+            if client is None:
+                return ("Error: Failed to initialize API client. Please check your API key.",)
+
+            # Prepare messages
+            messages = [{"role": "system", "content": system_prompt}]
+
+            # Handle image if provided
+            if image is not None:
+                try:
+                    base64_image = self.encode_image(image)
+                    messages.append({
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": user_prompt},
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": f"data:image/png;base64,{base64_image}"}
+                            }
+                        ]
+                    })
+                except Exception as img_error:
+                    logger.error(f"Image processing failed: {str(img_error)}")
+                    return (f"Error processing image: {str(img_error)}",)
+            else:
+                messages.append({"role": "user", "content": user_prompt})
+
+            try:
+                # API call with timeout handling
+                response = client.chat.completions.create(
+                    model=actual_model,
+                    messages=messages,
+                    temperature=temperature,
+                    top_p=top_p,
+                    top_k=top_k,
+                    repetition_penalty=repetition_penalty,
+                    stop=["<|eot_id|>", "<|eom_id|>"],
+                    stream=True
+                )
+
+                # Process streamed response with timeout
+                description = ""
+                start_time = time.time()
+
+                for chunk in response:
+                    if time.time() - start_time > timeout:
+                        logger.error("Response generation timed out")
+                        return (f"Error: Response generation timed out after {timeout} seconds.",)
+
+                    if not hasattr(chunk, 'choices') or not chunk.choices:
+                        continue
+
+                    delta = chunk.choices[0].delta
+                    if hasattr(delta, 'content') and delta.content:
+                        description += delta.content
+
+                if not description:
+                    raise ValueError("No response generated")
+
+                # Remove any content before the first actual prompt/description output
+                # Heuristic: Find the first quoted block or the first paragraph that does not contain 'think', 'reason', or similar meta words
+                import re
+                # Remove <think>...</think> or similar blocks
+                description = re.sub(r'<think>[\s\S]*?</think>', '', description, flags=re.IGNORECASE)
+                # Remove lines starting with 'think', 'reason', etc.
+                description = re.sub(r'^\s*\w*think\w*[:：>\-\s]*[\s\S]*?(?=\n|$)', '', description, flags=re.IGNORECASE | re.MULTILINE)
+                # Remove any markdown code blocks
+                description = re.sub(r'```[\s\S]*?```', '', description, flags=re.MULTILINE)
+                # Remove lines that look like meta-instructions
+                description = re.sub(r'^\s*\[.*?\]\s*$', '', description, flags=re.MULTILINE)
+                # Remove extra blank lines at the start
+                description = description.lstrip('\n')
+                # Try to keep only the first meaningful paragraph (heuristic for AI outputs)
+                # If there are two or more paragraphs, and the first is short (\n\n), skip it
+                paras = [p for p in description.split('\n\n') if p.strip()]
+                if len(paras) > 1 and len(paras[0].strip()) < 100:
+                    description = '\n\n'.join(paras[1:])
+                else:
+                    description = '\n\n'.join(paras)
+
+                return (description.strip(),)
+
+            except Exception as api_error:
+                error_msg = str(api_error).lower()
+                if "rate limit" in error_msg:
+                    wait_time = "1 hour"
+                    model_type = "free" if "free" in model_name.lower() else "paid"
+                    time_match = re.search(r"try again in (?:about )?([^:]+)", error_msg)
+                    if time_match:
+                        wait_time = time_match.group(1)
+                    return (f"""⚠️ Rate Limit Exceeded\n\nThe {model_name} has reached its rate limit.\nPlease try again in {wait_time}.\n\nTips to handle rate limits:\n1. {'Switch to the paid model for higher limits' if model_type == 'free' else 'Check your Together AI subscription limits'}\n2. Wait for the rate limit to reset\n3. Use a different Together AI account\n4. Space out your requests over time\n\nRate Limits:\n• Free Model: ~100 requests/day, 20-30 requests/hour\n• Paid Model: Based on subscription tier""",)
+                else:
+                    logger.error(f"API error: {api_error}")
+                    return (f"Error: {api_error}",)
+
+        except Exception as e:
+            error_msg = str(e)
+            logger.error(f"Process error: {error_msg}")
+            return (f"Error: {error_msg}",)
+
+# Node registration
+NODE_CLASS_MAPPINGS = {
+    "Together Vision 🔍": TogetherVisionNode
+}
+
+NODE_DISPLAY_NAME_MAPPINGS = {
+    "Together Vision 🔍": "Together Vision 🔍"
+}
