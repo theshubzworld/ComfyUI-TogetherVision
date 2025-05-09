@@ -92,7 +92,8 @@ class TogetherVisionNode:
                         "deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free",
                         "meta-llama/Llama-Vision-Free",
                         "meta-llama/Llama-3.2-90B-Vision-Instruct-Turbo",
-                    "Other (Custom)"
+                        "mistralai/Mistral-7B-Instruct-v0.2",
+                        "Other (Custom)"
                 ], {"default": "deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free"}), # Default to a common vision model
                 "custom_model_name": ("STRING", {"default": "", "multiline": False}),
                 "api_key": ("STRING", {"default": "", "multiline": False, "placeholder": "Enter Together API Key (or use .env)"}),
