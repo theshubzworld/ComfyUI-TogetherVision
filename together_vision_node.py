@@ -90,7 +90,6 @@ class TogetherVisionNode:
                 "model_name": ([
                         "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
                         "deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free",
-                        "meta-llama/Llama-Vision-Free",
                         "meta-llama/Llama-3.2-90B-Vision-Instruct-Turbo",
                         "mistralai/Mistral-7B-Instruct-v0.2",
                         "Other (Custom)"
