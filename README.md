@@ -1,6 +1,6 @@
-# ComfyUI-TogetherVision
+# ComfyUI-TogetherVision (v2.2.0)
 
-A simple ComfyUI custom node for image description and image generation using Together AI’s Vision models.
+A ComfyUI custom node for image description and image generation using Together AI's Vision models with advanced features including seed control.
 
 ## Features
 
@@ -32,6 +32,12 @@ The node also supports these non-vision, text-only models:
 You can use these models for pure text generation tasks when no image is provided.
 
 For image generation, the node uses Together AI's FLUX model.
+
+## New in v2.2.0
+
+- Added seed mode selection (fixed, random, increment)
+- Added seed parameter for reproducible results
+- Automatic regeneration on seed/mode changes
 
 ## Getting Started
 

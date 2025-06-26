@@ -33,6 +33,7 @@ class TogetherVisionNode:
         self.min_request_interval: float = 1.0  # Minimum seconds between requests (client-side)
         self.cache: dict[str, str] = {}  # Response cache
         self._current_api_key: Optional[str] = None # To track if API key changed
+        self._last_seed: Optional[int] = None # To track the last used seed for increment mode
         
     def validate_api_key(self, api_key: str) -> bool:
         """Validate if API key is present and well-formed."""
@@ -109,13 +110,15 @@ class TogetherVisionNode:
                 "top_k": ("INT", {"default": 50, "min": 0, "max": 100, "step": 1}), # 0 can mean disable top_k for some APIs
                 "repetition_penalty": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 2.0, "step": 0.01}),
                 "max_tokens": ("INT", {"default": 1024, "min": 50, "max": 4096, "step": 8, "label": "Max Tokens (Output Length)"}),
-                "stop_sequences": ("STRING", {"default": "<|eot_id|>,<|end_of_turn|>,<|im_end|>", "multiline": False, "placeholder": "e.g. ###,<|eot_id|>"}),
+                "stop_sequences": ("STRING", {"default": "<|eot_id|>,\n,\n", "multiline": False, "placeholder": "e.g. ###,<|eot_id|>"}),
                 "request_timeout": ("INT", {"default": 60, "min": 10, "max": 300, "step": 5, "label": "API Request Timeout (s)"}),
                 "stream_timeout": ("INT", {"default": 45, "min": 5, "max": 120, "step": 1, "label": "Stream Accumulation Timeout (s)"}),
                 "use_cache": ("BOOLEAN", {"default": True, "label_on": "Cache Enabled", "label_off": "Cache Disabled"}),
                 "clean_output_text": ("BOOLEAN", {"default": True, "label_on": "Clean Output Text", "label_off": "Raw Output Text"}),
                 "max_retries": ("INT", {"default": 2, "min": 0, "max": 5, "step": 1, "label": "Max Retries"}),
-                "retry_delay": ("FLOAT", {"default": 3.0, "min": 0.5, "max": 10.0, "step": 0.5, "label": "Retry Delay (s)"})
+                "retry_delay": ("FLOAT", {"default": 3.0, "min": 0.5, "max": 10.0, "step": 0.5, "label": "Retry Delay (s)"}),
+                "seed_mode": (["fixed", "random", "increment"], {"default": "fixed"}),
+                "seed": ("INT", {"default": 42, "min": 0, "max": 2**32-1, "step": 1, "display": "number"})
             },
             "optional": {
                 "image": ("IMAGE",)
@@ -239,6 +242,7 @@ class TogetherVisionNode:
                      request_timeout: int, stream_timeout: int,
                      use_cache: bool, clean_output_text: bool,
                      max_retries: int, retry_delay: float,
+                     seed_mode: str = "fixed", seed: int = 42,
                      image: Optional[torch.Tensor] = None) -> Tuple[str,]:
         """
         Process the image and generate description using Together API.
@@ -281,6 +285,18 @@ class TogetherVisionNode:
         
         # Parse stop sequences
         parsed_stop_sequences = [s.strip() for s in stop_sequences.split(',') if s.strip()] if stop_sequences else None
+        
+        # Determine seed based on mode
+        if seed_mode == "fixed":
+            current_seed = seed
+        elif seed_mode == "random":
+            current_seed = torch.randint(0, 2**32 - 1, (1,)).item()
+        else:  # increment
+            if self._last_seed is None:
+                current_seed = seed
+            else:
+                current_seed = self._last_seed + 1
+        self._last_seed = current_seed
 
         # Cache Key Generation
         cache_key = None
@@ -320,6 +336,7 @@ class TogetherVisionNode:
                     repetition_penalty=repetition_penalty,
                     max_tokens=max_tokens,
                     stop=parsed_stop_sequences,
+                    seed=current_seed,
                     stream=True,
                     timeout=float(request_timeout) # httpx timeout
                 )

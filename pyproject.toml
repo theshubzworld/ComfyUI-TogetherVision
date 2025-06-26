@@ -1,7 +1,7 @@
 [project]
 name = "comfyui-togethervision"
 description = "A custom ComfyUI node using Together AI's Vision models for free image descriptions, image generation, and image-to-image transformation. Features include customizable prompts, advanced parameters, and robust error handling."
-version = "2.1.7"
+version = "2.2.0"
 license = {file = "LICENSE"}
 dependencies = ["together", "python-dotenv"]
 
