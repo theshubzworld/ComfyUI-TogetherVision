@@ -12,4 +12,5 @@ Repository = "https://github.com/theshubzworld/ComfyUI-TogetherVision"
 [tool.comfy]
 PublisherId = "theshubzworld"
 DisplayName = "ComfyUI-TogetherVision"
-Icon = "icon.svg"
+Icon = "https://avatars.githubusercontent.com/u/176368083"
+
